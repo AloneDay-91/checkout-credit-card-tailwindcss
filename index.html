@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col items-center h-screen justify-center bg-gray-100">
+
+<div class="absolute left-0 top-0 h-16 w-16">
+    <div class="absolute transform -rotate-45 bg-gray-600 text-center text-white font-semibold py-1 left-[-34px] top-[32px] w-[170px]">
+        <a href="https://github.com/AloneDay-91">Made by AloneDay</a>
+    </div>
+</div>
+
+    <div class="w-full max-w-md h-auto bg-white p-6 m-24 rounded shadow-md">
+        <div class="flex justify-center w-full">
+            <div>
+                <div id="paypal-button-container"></div>
+            </div>
+            &nbsp;
+            <div>
+                <div id="container"></div>
+            </div>
+        </div>
+        <div class="inline-flex items-center justify-center w-full">
+            <hr class="w-64 h-px border-0 dark:bg-gray-700">
+            <span class="absolute px-3 text-sm font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2">OU</span>
+        </div>
+        &nbsp;
+        <h1 class="text-gray-900 font-semibold text-center text-xl">Payer par carte</h1>
+        <br>
+        <form>
+            <div class="flex flex-col">
+                <label for="cardholder" class="text-sm text-gray-500">Email</label>
+                <input type="email" class="border border-1 rounded shadow-sm p-1 focus:outline focus:outline-1 focus:outline-blue-500">
+            </div>
+            &nbsp;
+            <div class="flex flex-col">
+                <label for="cardholder" class="text-sm text-gray-500">Numéros de carte</label>
+                <input type="text" class="border border-1 rounded shadow-sm p-1 focus:outline focus:outline-1 focus:outline-blue-500" placeholder="1234 1234 1234 1234">
+            </div>
+            &nbsp;
+            <div class="flex justify-between">
+                <div class="flex flex-col">
+                    <input type="text" class="border border-1 rounded shadow-sm p-1 focus:outline focus:outline-1 focus:outline-blue-500" placeholder="MM / AA">
+                </div>
+                <div class="flex flex-col">
+                    <input type="text" class="border border-1 rounded shadow-sm p-1 focus:outline focus:outline-1 focus:outline-blue-500" placeholder="CVC">
+                </div>
+            </div>
+            &nbsp;
+            <div class="flex flex-col">
+                <label for="cardholder" class="text-sm text-gray-500">Nom du titulaire</label>
+                <input type="text" class="border border-1 rounded shadow-sm p-1 focus:outline focus:outline-1 focus:outline-blue-500">
+            </div>
+            &nbsp;
+            <div class="flex flex-col">
+                <label for="cardholder" class="text-sm text-gray-500">Pays</label>
+                <select class="border border-1 rounded shadow-sm p-1 text-gray-500 text-md focus:outline focus:outline-1 focus:outline-blue-500">
+                    <option>France</option>
+                    <option>Belgique</option>
+                    <option>Canada</option>
+                    <option>Italie</option>
+                    <option>Espagne</option>
+                </select>
+            </div>
+            &nbsp;
+            <div class="flex border border-1 bg-gray-50 p-1 items-start">
+                <input type="checkbox" class="m-3">
+                <div class="flex flex-col p-2">
+                    <div>
+                        <p class="text-sm text-gray-500">Enregistrer mes informations en toute sécurité pour le paiement en un clic</p>
+                    </div>
+                </div>
+            </div>
+            &nbsp;
+            <div>
+                <button class="rounded bg-blue-500 text-white p-2 w-full text-md font-semibold">Payer</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+    html,body {
+        font-family: 'Albert Sans', sans-serif;
+    }
+</style>
+
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+
+<script>
+    // Render the PayPal button into #paypal-button-container
+    paypal.Buttons({
+
+        style: {
+            color:  'gold',
+            layout: 'horizontal',
+            shape:  'rect',
+            height: 40
+        }
+
+    }).render('#paypal-button-container');
+</script>
+
+<script>
+
+    var allowedPaymentMethods = ['CARD', 'TOKENIZED_CARD'];
+
+    var allowedCardNetworks = ['AMEX', 'DISCOVER', 'JCB', 'MASTERCARD', 'VISA'];
+
+    var tokenizationParameters = {
+        tokenizationType: 'PAYMENT_GATEWAY',
+        parameters: {
+            'gateway': 'example',
+            'gatewayMerchantId': 'abc123'
+        }
+    }
+    function getGooglePaymentsClient() {
+        return (new google.payments.api.PaymentsClient({environment: 'TEST'}));
+    }
+    function onGooglePayLoaded() {
+        var paymentsClient = getGooglePaymentsClient();
+        paymentsClient.isReadyToPay({allowedPaymentMethods: allowedPaymentMethods})
+            .then(function(response) {
+                if (response.result) {
+                    addGooglePayButton();
+                    prefetchGooglePaymentData();
+                }
+            })
+            .catch(function(err) {
+                // show error in developer console for debugging
+                console.error(err);
+            });
+    }
+    function addGooglePayButton() {
+        var paymentsClient = getGooglePaymentsClient();
+        var button = paymentsClient.createButton({
+            onClick:onGooglePaymentButtonClicked,
+            buttonColor: 'black', // default: 'default' | optional
+            buttonType: 'short', // default: 'short' | optional
+            buttonLocale: 'fr',
+        });
+        document.getElementById('container').appendChild(button);
+    }
+    function getGooglePaymentDataConfiguration() {
+        return {
+            // @todo a merchant ID is available for a production environment after approval by Google
+            // @see {@link https://developers.google.com/pay/api/web/guides/test-and-deploy/integration-checklist|Integration checklist}
+            merchantId: '01234567890123456789',
+            paymentMethodTokenizationParameters: tokenizationParameters,
+            allowedPaymentMethods: allowedPaymentMethods,
+            cardRequirements: {
+                allowedCardNetworks: allowedCardNetworks
+            }
+        };
+    }
+    function getGoogleTransactionInfo() {
+        return {
+            currencyCode: 'USD',
+            totalPriceStatus: 'FINAL',
+            // set to cart total
+            totalPrice: '1.00'
+        };
+    }
+    function prefetchGooglePaymentData() {
+        var paymentDataRequest = getGooglePaymentDataConfiguration();
+        // transactionInfo must be set but does not affect cache
+        paymentDataRequest.transactionInfo = {
+            totalPriceStatus: 'NOT_CURRENTLY_KNOWN',
+            currencyCode: 'EUR'
+        };
+        var paymentsClient = getGooglePaymentsClient();
+        paymentsClient.prefetchPaymentData(paymentDataRequest);
+    }
+    function onGooglePaymentButtonClicked() {
+        var paymentDataRequest = getGooglePaymentDataConfiguration();
+        paymentDataRequest.transactionInfo = getGoogleTransactionInfo();
+
+        var paymentsClient = getGooglePaymentsClient();
+        paymentsClient.loadPaymentData(paymentDataRequest)
+            .then(function(paymentData) {
+                // handle the response
+                processPayment(paymentData);
+            })
+            .catch(function(err) {
+                // show error in developer console for debugging
+                console.error(err);
+            });
+    }
+    function processPayment(paymentData) {
+        // show returned data in developer console for debugging
+        console.log(paymentData);
+        // @todo pass payment data response to gateway to process payment
+    }
+</script>
+<script
+        async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()">
+</script>
